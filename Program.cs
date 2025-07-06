@@ -14,12 +14,12 @@ class Program
         int maxAttempts;
         Option<string> passCodeOption = new("-c")
         {
-            Description = "The file to read and display on the console."
+            Description = "Write your own 4 digit code (don't tell anyone)."
         };
         
         Option<int> attemptOption = new("-t")
         {
-            Description = "The file to read and display on the console.",
+            Description = "Change how many tries you get.",
             DefaultValueFactory = parseResult => 10
         };
        
@@ -29,6 +29,7 @@ class Program
        
         ParseResult parseResult = rootCommand.Parse(args);
         //if(parseResult.GetValueForOption(HelpOption()))
+        
         if (parseResult.GetValue(passCodeOption) is string parsedCode)
         {
             passCode  = parsedCode;
@@ -42,6 +43,7 @@ class Program
             Console.Error.WriteLine(parseError.Message);
         }
         //rootCommand.Parse("-h").Invoke();
+
         Gameplay gameplay = new Gameplay(passCode, maxAttempts);
         gameplay.Play();
     }

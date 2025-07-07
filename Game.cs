@@ -1,40 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.CommandLine.Parsing;
+using System.CommandLine;
 
 namespace Mastermind
 {
-    public class Gameplay([Optional] string passCode, [Optional] int maxAttempts)
+    public class Gameplay
     {
+        private string? Code { get; set; }
+        private int Attempts { get; set; }
+
+
         public void Play()
-        {          
-            //string passCode = GenerateSecretCode();
-            int attempts = maxAttempts;
+        {
 
-            if (string.IsNullOrEmpty(passCode))
-            {
-                passCode = GenerateSecretCode();
-            }
-            else if (!IsValidGuess(passCode))
-            {
-                Console.WriteLine("Hey! That passcode won't work. Remember the code has to be 4 unique numbers between 0 and 8.\n");
-                return;
-            }
-            
             Console.WriteLine("Can you break the code? Enter a valid guess.\n");
-
-            while (attempts > 0)
+            int currentAttempt = 1;
+            while (currentAttempt <= Attempts)
             {
-                Console.Write($"Round {maxAttempts - attempts+1}/{maxAttempts}: " );
+
+                Console.Write($"Round {currentAttempt}/{Attempts}: ");
                 string guess = ReadLineWithControlDetection();
 
 
                 if (string.IsNullOrEmpty(guess))
                 {
-                    //Console.WriteLine("\nEOF");
+                    Console.WriteLine("\nThanks for playing!:)");
                     return;
                 }
 
@@ -45,34 +34,37 @@ namespace Mastermind
                     continue;
                 }
 
-                if (guess == passCode)
+                if (guess == Code)
                 {
                     Console.WriteLine("Congratz! You did it!");
                     return;
                 }
 
-                (int correctPos, int correctDigit) = EvaluateGuess(passCode, guess);
+                (int correctPos, int correctDigit) = EvaluateGuess(guess);
                 Console.WriteLine($"Well-placed pieces: {correctPos}\nMisplaced pieces: {correctDigit}\n");
 
-                attempts--;
+                currentAttempt++;
             }
-            Console.WriteLine($"Out of attempts! The passcode was: {passCode}");
+            Console.WriteLine($"Out of attempts! The passcode was: {Code}");
         }
         private static string GenerateSecretCode()
         {
             Random rand = new Random();
-            int[] digits = new int[4];
+            string result = "";
 
-            for (int i=0; i<4; i++)
+            while (result.Length < 4)
             {
-                int num = rand.Next(0,9); // digits from 0 to 8
-                if (!digits.Contains(num))
-                    digits[i]=num;
+                string digit = rand.Next(0, 9).ToString();
+
+                if (!result.Contains(digit))
+                {
+                    result += digit;
+                }
             }
 
-            return string.Join("", digits);
+            return result;
         }
-        
+
         private static bool IsValidGuess(string guess)
         {
             if (guess.Length != 4) return false;
@@ -88,18 +80,19 @@ namespace Mastermind
             return true;
         }
 
-        private static (int, int) EvaluateGuess(string code, string guess)
+        private (int, int) EvaluateGuess(string guess)
         {
             int correctPos = 0;
             int correctDigit = 0;
 
+
             for (int i = 0; i < 4; i++)
             {
-                if (guess[i] == code[i])
+                if (guess[i] == Code[i])
                 {
                     correctPos++;
                 }
-                else if (code.Contains(guess[i]))
+                else if (Code.Contains(guess[i]))
                 {
                     correctDigit++;
                 }
@@ -117,10 +110,9 @@ namespace Mastermind
                 key = Console.ReadKey(intercept: true);
 
                 // Detect Ctrl+D
-                if (key.Key == ConsoleKey.D && key.Modifiers.HasFlag(ConsoleModifiers.Control) || 
+                if (key.Key == ConsoleKey.D && key.Modifiers.HasFlag(ConsoleModifiers.Control) ||
                     key.Key == ConsoleKey.Z && key.Modifiers.HasFlag(ConsoleModifiers.Control))
                 {
-                    //Console.WriteLine("\n[Ctrl+D Detected]");
                     return null; // Simulate EOF
                 }
 
@@ -153,5 +145,53 @@ namespace Mastermind
 
             return input;
         }
+        public bool Setup(string[] args)
+        {
+            Option<string> passCodeOption = new("-c")
+            {
+                Description = "Write your own 4 digit code (don't tell anyone)."
+            };
+
+            Option<int> attemptOption = new("-t")
+            {
+                Description = "Change how many tries you get.",
+                DefaultValueFactory = parseResult => 10
+            };
+
+            RootCommand rootCommand = new("Mastermind");
+            rootCommand.Options.Add(passCodeOption);
+            rootCommand.Options.Add(attemptOption);
+            ParseResult parseResult = rootCommand.Parse(args);
+
+            if (args.Any(arg => arg is "-h" or "--help" or "-?") || parseResult.Errors.Count() > 0)
+            {
+                foreach (ParseError parseError in parseResult.Errors)
+                {
+                    Console.Error.WriteLine(parseError.Message);
+                }
+                rootCommand.Parse("-h").Invoke();
+                return false;
+            }
+
+            if (parseResult.GetValue(passCodeOption) is string parsedCode)
+            {
+                Code = parsedCode;
+            }
+            if (parseResult.GetValue(attemptOption) is int parsedAttempts)
+            {
+                Attempts = parsedAttempts;
+            }
+            if (string.IsNullOrEmpty(Code))
+            {
+                Code = GenerateSecretCode();
+            }
+            else if (!IsValidGuess(Code))
+            {
+                Console.WriteLine("Hey! That passcode won't work. Remember the code has to be 4 unique numbers between 0 and 8.\n");
+                return false;
+            }
+            return true;
+        }
+
     }
 }

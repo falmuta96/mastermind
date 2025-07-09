@@ -19,6 +19,12 @@ You win if you guess the code within the allowed attempts. The game also support
 - Input validation for guesses (must be 4 unique digits between 0 and 8).
 - Command-line interface with options for customization.
 
+## How it Works
+
+- The secret code is generated randomly (or can be set via `-c`).
+- Each guess is checked for valid format and uniqueness.
+- The game evaluates and prints feedback for each guess until the player wins or runs out of attempts.
+  
 ## How to Play
 
 1. **Run the program:**
@@ -41,7 +47,7 @@ You win if you guess the code within the allowed attempts. The game also support
    - If you guess the code, you win! If you run out of attempts, the secret code is revealed.
 
 5. **Exit:**  
-   Press `Ctrl+D` (or `Ctrl+Z` on Windows) to quit early.
+   Press `Ctrl+D` (or `Ctrl+Z` ) to quit early.
 
 ## Command-Line Options
 
@@ -73,16 +79,6 @@ Misplaced pieces: 1
 ## Requirements
 
 - [.NET SDK](https://dotnet.microsoft.com/) (for building/running)
-
-## How it Works
-
-- The secret code is generated randomly (or can be set via `-c`).
-- Each guess is checked for valid format and uniqueness.
-- The game evaluates and prints feedback for each guess until the player wins or runs out of attempts.
-
-## License
-
-This project currently does not specify a license.
 
 ---
 **Author:** [falmuta96](https://github.com/falmuta96)
